@@ -1,0 +1,97 @@
+<beans:beans xmlns:beans="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jee="http://www.springframework.org/schema/jee"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd
+		http://www.springframework.org/schema/jms">
+
+    <!--<http auto-config="true">-->
+        <!--<intercept-url pattern="/welcome*" access="ROLE_USER" />-->
+        <!--<form-login login-page="/login" default-target-url="/welcome"-->
+                    <!--authentication-failure-url="/loginfailed" />-->
+        <!--<logout logout-success-url="/logout" />-->
+    <!--</http>-->
+
+    <!--<authentication-manager>
+        <authentication-provider user-service-ref="userService"/>
+    </authentication-manager>-->
+
+
+    <!--<user-service id="userService">
+        <user name="habuma" password="letmein"
+              authorities="ROLE_SPITTER,ROLE_ADMIN"/>
+        <user name="twoqubed" password="longhorns"
+              authorities="ROLE_SPITTER"/>
+        <user name="admin" password="admin"
+              authorities="ROLE_ADMIN"/>
+    </user-service>-->
+
+    <beans:bean id="filterChainProxy" class="org.acegisecurity.util.FilterChainProxy">
+        <beans:property name="filterInvocationDefinitionSource">
+            <beans:value>
+                PATTERN_TYPE_APACHE_ANT
+                /**=httpSessionIntegrationFilter,
+                authenticationProcessingFilter,
+                filterSecurityInterceptor
+            </beans:value>
+        </beans:property>
+    </beans:bean>
+
+    <beans:bean id="httpSessionIntegrationFilter" class="org.acegisecurity.context.HttpSessionContextIntegrationFilter"/>
+
+    <beans:bean id="authenticationProcessingFilter" class="org.acegisecurity.ui.basicauth.BasicProcessingFilter">
+        <beans:property name="authenticationManager" ref="authenticationManager"/>
+        <beans:property name="authenticationEntryPoint" ref="authenticationEntryPoint"/>
+    </beans:bean>
+
+    <beans:bean id="filterSecurityInterceptor" class="org.acegisecurity.intercept.web.FilterSecurityInterceptor">
+        <beans:property name="authenticationManager" ref="authenticationManager"/>
+        <beans:property name="accessDecisionManager" ref="accessDecisionManager"/>
+        <beans:property name="objectDefinitionSource">
+            <beans:value>
+                PATTERN_TYPE_APACHE_ANT
+                /SpringSecurity/hello.jsp=ROLE_USER
+            </beans:value>
+        </beans:property>
+    </beans:bean>
+
+    <beans:bean id="authenticationEntryPoint" class="org.acegisecurity.ui.webapp.AuthenticationProcessingFilterEntryPoint">
+        <beans:property name="loginFormUrl" value="/SpringSecurity/login.jsp"/>
+        <beans:property name="forceHttps" value="true"/>
+    </beans:bean>
+
+    <beans:bean id="accessDecisionManager" class="org.acegisecurity.vote.UnanimousBased">
+        <beans:property name="decisionVoters">
+            <beans:list>
+                <beans:ref bean="roleVoter"/>
+            </beans:list>
+        </beans:property>
+    </beans:bean>
+
+    <beans:bean id="roleVoter" class="org.acegisecurity.vote.RoleVoter"/>
+
+    <beans:bean id="authenticationManager" class="org.acegisecurity.providers.ProviderManager">
+        <beans:property name="providers">
+            <beans:list>
+                <beans:ref bean="authenticationProvider"/>
+            </beans:list>
+        </beans:property>
+    </beans:bean>
+
+    <beans:bean id="authenticationProvider" class="org.acegisecurity.providers.dao.DaoAuthenticationProvider">
+        <beans:property name="userDetailsService" ref="authenticationDao"/>
+    </beans:bean>
+
+    <beans:bean id="authenticationDao" class="org.acegisecurity.userdetails.memory.InMemoryDaoImpl">
+         <beans:property name="userMap">
+             <beans:value>
+                leiyu=123,ROLE_USER
+             </beans:value>
+         </beans:property>
+    </beans:bean>
+
+</beans:beans>
